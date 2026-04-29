@@ -60,14 +60,34 @@ if (empty($DATABASE_URL)) {
 // Construir .env
 echo "==> .env ya existe desde build\n";
 
+// Verificar si las tablas ya existen en la BD (import de HeidiSQL)
+$tablesExist = false;
+try {
+    $dsn    = str_replace('postgresql://', 'pgsql://', $DATABASE_URL);
+    $parsed = parse_url($DATABASE_URL);
+    $pdo    = new PDO(
+        "pgsql:host={$parsed['host']};port=" . ($parsed['port'] ?? 5432) . ";dbname=" . ltrim($parsed['path'], '/'),
+        $parsed['user'],
+        urldecode($parsed['pass']),
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+    );
+    $count = $pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public'")->fetchColumn();
+    $tablesExist = $count > 5;
+    echo "==> Tablas en BD: $count " . ($tablesExist ? "(ya importadas, saltando migraciones y seeders)" : "(BD vacía, ejecutando migraciones)") . "\n";
+} catch (Exception $e) {
+    echo "==> No se pudo verificar tablas: " . $e->getMessage() . "\n";
+}
+
 $cmds = [
     'php artisan config:clear',
-    'php artisan migrate --force',
-    'php artisan db:seed --class=DepartamentosSeeder --force',
-    'php artisan db:seed --class=CargosSeeder --force',
-    'php artisan db:seed --class=MunicipiosSeeder --force',
-    'php artisan db:seed --class=LocalidadesSeeder --force',
-    'php artisan db:seed --class=AdminUserSeeder --force',
+    ...($tablesExist ? [] : [
+        'php artisan migrate --force',
+        'php artisan db:seed --class=DepartamentosSeeder --force',
+        'php artisan db:seed --class=CargosSeeder --force',
+        'php artisan db:seed --class=MunicipiosSeeder --force',
+        'php artisan db:seed --class=LocalidadesSeeder --force',
+        'php artisan db:seed --class=AdminUserSeeder --force',
+    ]),
     'php artisan config:cache',
     'php artisan route:cache',
     'php artisan view:cache',
