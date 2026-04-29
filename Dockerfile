@@ -66,6 +66,13 @@ exec("sed -i 's/Listen 80/Listen $port/' /etc/apache2/ports.conf");
 exec("sed -i 's/<VirtualHost \\*:80>/<VirtualHost *:$port>/' /etc/apache2/sites-available/000-default.conf");
 exec("sed -i 's/<VirtualHost \\*:80>/<VirtualHost *:$port>/' /etc/apache2/sites-enabled/000-default.conf 2>/dev/null || true");
 
+// Arrancar Apache en segundo plano PRIMERO para que Render vea el puerto
+echo "==> Iniciando Apache en segundo plano...\n";
+exec('apache2-foreground > /var/log/apache2/startup.log 2>&1 &');
+sleep(3);
+echo "==> Apache iniciado\n";
+
+// Ejecutar setup de base de datos
 $cmds = [
     'php artisan config:clear',
     'php artisan migrate:fresh --force',
@@ -78,7 +85,6 @@ $cmds = [
     'php artisan route:cache',
     'php artisan view:cache',
     'php artisan storage:link',
-    'apache2-foreground',
 ];
 
 $skip = ['php artisan storage:link'];
@@ -88,9 +94,13 @@ foreach ($cmds as $cmd) {
     passthru($cmd, $code);
     if ($code !== 0 && !in_array($cmd, $skip)) {
         echo "==> ERROR: $cmd (codigo $code)\n";
-        exit($code);
+        // No salir — Apache ya está corriendo
     }
 }
+
+echo "==> Setup completado. Manteniendo proceso activo...\n";
+// Mantener el proceso vivo mientras Apache corre en segundo plano
+passthru('wait');
 PHPEOF
 
 EXPOSE 80
