@@ -204,6 +204,14 @@
                         <i class="bi bi-person-gear"></i> Usuarios
                     </a>
                 </li>
+                <li class="nav-item mt-1">
+                    <small class="sidebar-label">WhatsApp</small>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('mensajes.*') ? 'active' : '' }}" href="{{ route('mensajes.index') }}">
+                        <i class="bi bi-whatsapp text-success"></i> Mensajes masivos
+                    </a>
+                </li>
                 @endif
             </ul>
         </nav>
