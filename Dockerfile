@@ -33,14 +33,14 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
 # Configuración de producción
-ENV DATABASE_URL="postgresql://neondb_owner:npg_tkTFA2DbRLn5@ep-curly-poetry-ano8hn7w-pooler.c-6.us-east-1.aws.neon.tech/RenovacionSomos?sslmode=require"
+ENV DATABASE_URL="postgresql://neondb_owner:npg_tkTFA2DbRLn5@ep-curly-poetry-ano8hn7w.us-east-1.aws.neon.tech/RenovacionSomos?sslmode=require"
 ENV ULTRAMSG_INSTANCE="instance172465"
 ENV ULTRAMSG_TOKEN="gg1udf6cwn10vbc1"
 
 # Generar APP_KEY en tiempo de build y escribir .env completo y válido
 RUN php artisan key:generate --show > /tmp/app_key.txt 2>&1; \
     APP_KEY=$(cat /tmp/app_key.txt | tr -d '[:space:]'); \
-    DB_URL="postgresql://neondb_owner:npg_tkTFA2DbRLn5@ep-curly-poetry-ano8hn7w-pooler.c-6.us-east-1.aws.neon.tech/RenovacionSomos?sslmode=require"; \
+    DB_URL="postgresql://neondb_owner:npg_tkTFA2DbRLn5@ep-curly-poetry-ano8hn7w.us-east-1.aws.neon.tech/RenovacionSomos?sslmode=require"; \
     printf 'APP_NAME="Censo Renovacion Somos"\nAPP_ENV=production\nAPP_KEY=%s\nAPP_DEBUG=false\nDB_CONNECTION=pgsql\nDATABASE_URL=%s\nSESSION_DRIVER=file\nCACHE_STORE=file\nQUEUE_CONNECTION=sync\nLOG_LEVEL=error\nULTRASMG_INSTANCE=instance172465\nULTRASMG_TOKEN=gg1udf6cwn10vbc1\n' "$APP_KEY" "$DB_URL" > /var/www/html/.env; \
     cat /var/www/html/.env
 
