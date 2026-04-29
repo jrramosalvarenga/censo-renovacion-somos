@@ -58,25 +58,18 @@ if (empty($DATABASE_URL)) {
 }
 
 // Construir .env
-$env = [
-    'APP_NAME'          => getenv('APP_NAME')         ?: 'Censo Renovacion Somos',
-    'APP_ENV'           => getenv('APP_ENV')           ?: 'production',
-    'APP_KEY'           => getenv('APP_KEY')           ?: '',
-    'APP_DEBUG'         => 'false',
-    'DB_CONNECTION'     => 'pgsql',
-    'DATABASE_URL'      => $DATABASE_URL,
-    'SESSION_DRIVER'    => 'file',
-    'CACHE_STORE'       => 'file',
-    'QUEUE_CONNECTION'  => 'sync',
-    'LOG_LEVEL'         => 'error',
-    'ULTRAMSG_INSTANCE' => getenv('ULTRAMSG_INSTANCE') ?: '',
-    'ULTRAMSG_TOKEN'    => getenv('ULTRAMSG_TOKEN')    ?: '',
-];
-
-$content = '';
-foreach ($env as $k => $v) {
-    $content .= $k . '=' . $v . "\n";
-}
+$content = 'APP_NAME="Censo Renovacion Somos"' . "\n"
+    . 'APP_ENV=production' . "\n"
+    . 'APP_KEY=' . "\n"
+    . 'APP_DEBUG=false' . "\n"
+    . 'DB_CONNECTION=pgsql' . "\n"
+    . 'DATABASE_URL=' . $DATABASE_URL . "\n"
+    . 'SESSION_DRIVER=file' . "\n"
+    . 'CACHE_STORE=file' . "\n"
+    . 'QUEUE_CONNECTION=sync' . "\n"
+    . 'LOG_LEVEL=error' . "\n"
+    . 'ULTRAMSG_INSTANCE=' . (getenv('ULTRAMSG_INSTANCE') ?: 'instance172465') . "\n"
+    . 'ULTRAMSG_TOKEN=' . (getenv('ULTRAMSG_TOKEN') ?: 'gg1udf6cwn10vbc1') . "\n";
 file_put_contents('/var/www/html/.env', $content);
 echo "==> .env creado\n";
 
