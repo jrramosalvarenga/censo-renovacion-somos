@@ -9,6 +9,7 @@ php artisan db:seed --class=DepartamentosSeeder --force
 php artisan db:seed --class=CargosSeeder --force
 php artisan db:seed --class=MunicipiosSeeder --force
 php artisan db:seed --class=LocalidadesSeeder --force
+php artisan db:seed --class=AdminUserSeeder --force
 
 echo "==> Enlazando storage..."
 php artisan storage:link || true
