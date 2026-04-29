@@ -57,8 +57,14 @@ if (empty($DATABASE_URL)) {
     exit(1);
 }
 
-// Construir .env
 echo "==> .env ya existe desde build\n";
+
+// Configurar Apache en el puerto que pide Render (PORT env var)
+$port = getenv('PORT') ?: '10000';
+echo "==> Configurando Apache en puerto $port\n";
+exec("sed -i 's/Listen 80/Listen $port/' /etc/apache2/ports.conf");
+exec("sed -i 's/<VirtualHost \\*:80>/<VirtualHost *:$port>/' /etc/apache2/sites-available/000-default.conf");
+exec("sed -i 's/<VirtualHost \\*:80>/<VirtualHost *:$port>/' /etc/apache2/sites-enabled/000-default.conf 2>/dev/null || true");
 
 $cmds = [
     'php artisan config:clear',
