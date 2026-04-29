@@ -15,33 +15,72 @@
             --rs-accent: #ff6f00;
         }
         body { background: #f9f5f5; font-size: 0.92rem; }
+
+        /* ── Navbar ── */
         .navbar { background: var(--rs-primary) !important; }
         .navbar-brand { font-weight: 700; letter-spacing: 0.5px; color: #fff !important; }
         .navbar-brand span { color: #ffcc80; }
-        .nav-link { color: rgba(255,255,255,0.85) !important; }
-        .nav-link:hover, .nav-link.active { color: #ffcc80 !important; }
-        .sidebar { background: #fff; min-height: calc(100vh - 56px); border-right: 1px solid #f5c6c6; padding: 1.5rem 0; }
-        .sidebar .nav-link { color: #444; padding: 0.5rem 1.5rem; border-radius: 0; }
-        .sidebar .nav-link:hover { background: #fff5f5; color: var(--rs-primary); }
-        .sidebar .nav-link.active { background: var(--rs-primary-light); color: var(--rs-primary); font-weight: 600; border-left: 3px solid var(--rs-primary); }
-        .sidebar .nav-link i { width: 20px; }
+        .navbar .nav-link { color: rgba(255,255,255,0.9) !important; }
+        .navbar .nav-link:hover,
+        .navbar .nav-link.active { color: #ffcc80 !important; }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            background: #1e1e1e;
+            min-height: calc(100vh - 56px);
+            border-right: none;
+            padding: 1rem 0;
+        }
+        .sidebar .sidebar-label {
+            display: block;
+            padding: 0.6rem 1.2rem 0.2rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #888;
+        }
+        .sidebar .nav-link {
+            color: #ccc !important;
+            padding: 0.45rem 1.2rem;
+            border-radius: 0;
+            border-left: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .sidebar .nav-link:hover {
+            background: rgba(255,255,255,0.07);
+            color: #fff !important;
+            border-left-color: transparent;
+        }
+        .sidebar .nav-link.active {
+            background: rgba(183,28,28,0.25);
+            color: #fff !important;
+            font-weight: 600;
+            border-left-color: var(--rs-primary);
+        }
+        .sidebar .nav-link i { font-size: 1rem; opacity: 0.85; flex-shrink: 0; }
+        .sidebar .nav-link.active i { opacity: 1; }
+
+        /* ── Cards y badges ── */
         .stat-card { border: none; border-radius: 12px; transition: transform 0.15s; }
         .stat-card:hover { transform: translateY(-2px); }
         .badge-militante { background: var(--rs-primary); }
         .badge-simpatizante { background: #6c757d; }
+
+        /* ── Botones ── */
         .btn-primary { background-color: var(--rs-primary) !important; border-color: var(--rs-primary-dark) !important; }
         .btn-primary:hover { background-color: var(--rs-primary-dark) !important; border-color: var(--rs-primary-dark) !important; }
         .btn-outline-primary { color: var(--rs-primary) !important; border-color: var(--rs-primary) !important; }
         .btn-outline-primary:hover { background-color: var(--rs-primary) !important; color: #fff !important; }
         .text-primary { color: var(--rs-primary) !important; }
         .bg-primary { background-color: var(--rs-primary) !important; }
-        .border-primary { border-color: var(--rs-primary) !important; }
         .badge.bg-primary { background-color: var(--rs-primary) !important; }
         .progress-bar { background-color: var(--rs-primary) !important; }
-        a { color: var(--rs-primary); }
-        a:hover { color: var(--rs-primary-dark); }
+
         @media (max-width: 767px) {
-            .sidebar { min-height: auto; border-right: none; border-bottom: 1px solid #e3e6ea; padding: 0.5rem 0; }
+            .sidebar { min-height: auto; border-bottom: 1px solid #333; padding: 0.5rem 0; }
         }
     </style>
     @yield('styles')
@@ -113,7 +152,7 @@
                     </a>
                 </li>
                 <li class="nav-item mt-2">
-                    <small class="px-3 text-muted text-uppercase fw-bold" style="font-size:0.7rem">Militancia</small>
+                    <small class="sidebar-label">Militancia</small>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('miembros.index') ? 'active' : '' }}" href="{{ route('miembros.index') }}">
@@ -125,8 +164,9 @@
                         <i class="bi bi-person-plus"></i> Nuevo miembro
                     </a>
                 </li>
+                @if(Auth::user()->esSupervisor())
                 <li class="nav-item mt-2">
-                    <small class="px-3 text-muted text-uppercase fw-bold" style="font-size:0.7rem">Territorio</small>
+                    <small class="sidebar-label">Territorio</small>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('localidades.*') ? 'active' : '' }}" href="{{ route('localidades.index') }}">
@@ -134,7 +174,7 @@
                     </a>
                 </li>
                 <li class="nav-item mt-2">
-                    <small class="px-3 text-muted text-uppercase fw-bold" style="font-size:0.7rem">Reportes</small>
+                    <small class="sidebar-label">Reportes</small>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('reportes.general') ? 'active' : '' }}" href="{{ route('reportes.general') }}">
@@ -156,6 +196,15 @@
                         <i class="bi bi-pin-map"></i> Por localidad
                     </a>
                 </li>
+                <li class="nav-item mt-2">
+                    <small class="sidebar-label">Administración</small>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('usuarios.*') ? 'active' : '' }}" href="{{ route('usuarios.index') }}">
+                        <i class="bi bi-person-gear"></i> Usuarios
+                    </a>
+                </li>
+                @endif
             </ul>
         </nav>
 
