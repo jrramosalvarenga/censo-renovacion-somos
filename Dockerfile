@@ -1,9 +1,9 @@
 FROM php:8.3-apache
 
-# Extensiones necesarias
+# Extensiones necesarias + dos2unix para corregir saltos de línea Windows
 RUN apt-get update && apt-get install -y \
     libpq-dev libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
-    zip unzip git curl \
+    zip unzip git curl dos2unix \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_pgsql pgsql zip gd \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -31,10 +31,12 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
     /etc/apache2/conf-available/*.conf \
     && a2enmod rewrite headers
 
-# Permisos
+# Permisos y corregir saltos de línea del script
 RUN chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+    && chmod -R 775 storage bootstrap/cache \
+    && dos2unix docker-start.sh \
+    && chmod +x docker-start.sh
 
 EXPOSE 80
 
-CMD ["bash", "/var/www/html/docker-start.sh"]
+CMD ["/bin/bash", "/var/www/html/docker-start.sh"]
