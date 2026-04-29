@@ -32,25 +32,53 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Crear script de inicio directamente (sin problemas de CRLF)
-RUN printf '#!/bin/bash\nset -e\n\n\
-if [ ! -f .env ]; then cp .env.example .env; fi\n\
-printenv | grep -E "^(APP_|DB_|DATABASE_URL|SESSION_|CACHE_|QUEUE_|LOG_)" >> .env 2>/dev/null || true\n\
-php artisan key:generate --force\n\
-php artisan config:clear\n\
-sleep 3\n\
-php artisan migrate --force\n\
-php artisan db:seed --class=DepartamentosSeeder --force\n\
-php artisan db:seed --class=CargosSeeder --force\n\
-php artisan db:seed --class=MunicipiosSeeder --force\n\
-php artisan db:seed --class=LocalidadesSeeder --force\n\
-php artisan db:seed --class=AdminUserSeeder --force\n\
-php artisan config:cache\n\
-php artisan route:cache\n\
-php artisan view:cache\n\
-php artisan storage:link || true\n\
-apache2-foreground\n' > /start.sh && chmod +x /start.sh
+# Crear script de arranque como archivo PHP (sin problemas de CRLF ni escapado)
+RUN cat > /startup.php << 'PHPEOF'
+<?php
+// Construir .env limpio desde variables de entorno de Render
+$keys = [
+    'APP_NAME', 'APP_ENV', 'APP_KEY', 'APP_DEBUG', 'APP_URL',
+    'DATABASE_URL', 'SESSION_DRIVER', 'CACHE_STORE', 'QUEUE_CONNECTION',
+    'LOG_LEVEL', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET',
+];
+$lines = ['DB_CONNECTION=pgsql'];
+foreach ($keys as $k) {
+    $v = getenv($k);
+    if ($v !== false && $v !== '') {
+        $lines[] = $k . '=' . $v;
+    }
+}
+file_put_contents('/var/www/html/.env', implode("\n", $lines) . "\n");
+echo "==> .env creado con " . count($lines) . " variables\n";
+
+chdir('/var/www/html');
+
+$cmds = [
+    'php artisan key:generate --force',
+    'php artisan config:clear',
+    'sleep 3',
+    'php artisan migrate --force',
+    'php artisan db:seed --class=DepartamentosSeeder --force',
+    'php artisan db:seed --class=CargosSeeder --force',
+    'php artisan db:seed --class=MunicipiosSeeder --force',
+    'php artisan db:seed --class=LocalidadesSeeder --force',
+    'php artisan db:seed --class=AdminUserSeeder --force',
+    'php artisan config:cache',
+    'php artisan route:cache',
+    'php artisan view:cache',
+    'php artisan storage:link',
+    'apache2-foreground',
+];
+
+foreach ($cmds as $cmd) {
+    echo "==> $cmd\n";
+    passthru($cmd, $code);
+    if ($code !== 0 && $cmd !== 'php artisan storage:link') {
+        exit($code);
+    }
+}
+PHPEOF
 
 EXPOSE 80
 
-CMD ["/bin/bash", "/start.sh"]
+CMD ["php", "/startup.php"]
