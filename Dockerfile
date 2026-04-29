@@ -32,17 +32,17 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Credenciales Neon y configuración de producción
+# Configuración de producción
 ENV DATABASE_URL="postgresql://neondb_owner:npg_tkTFA2DbRLn5@ep-curly-poetry-ano8hn7w-pooler.c-6.us-east-1.aws.neon.tech/RenovacionSomos?sslmode=require"
-ENV APP_NAME="Censo Renovacion Somos"
-ENV APP_ENV="production"
-ENV APP_DEBUG="false"
-ENV SESSION_DRIVER="file"
-ENV CACHE_STORE="file"
-ENV QUEUE_CONNECTION="sync"
-ENV LOG_LEVEL="error"
 ENV ULTRAMSG_INSTANCE="instance172465"
 ENV ULTRAMSG_TOKEN="gg1udf6cwn10vbc1"
+
+# Generar APP_KEY en tiempo de build y escribir .env completo y válido
+RUN php artisan key:generate --show > /tmp/app_key.txt 2>&1; \
+    APP_KEY=$(cat /tmp/app_key.txt | tr -d '[:space:]'); \
+    DB_URL="postgresql://neondb_owner:npg_tkTFA2DbRLn5@ep-curly-poetry-ano8hn7w-pooler.c-6.us-east-1.aws.neon.tech/RenovacionSomos?sslmode=require"; \
+    printf 'APP_NAME="Censo Renovacion Somos"\nAPP_ENV=production\nAPP_KEY=%s\nAPP_DEBUG=false\nDB_CONNECTION=pgsql\nDATABASE_URL=%s\nSESSION_DRIVER=file\nCACHE_STORE=file\nQUEUE_CONNECTION=sync\nLOG_LEVEL=error\nULTRASMG_INSTANCE=instance172465\nULTRASMG_TOKEN=gg1udf6cwn10vbc1\n' "$APP_KEY" "$DB_URL" > /var/www/html/.env; \
+    cat /var/www/html/.env
 
 # Script de arranque
 RUN cat > /startup.php << 'PHPEOF'
@@ -58,23 +58,9 @@ if (empty($DATABASE_URL)) {
 }
 
 // Construir .env
-$content = 'APP_NAME="Censo Renovacion Somos"' . "\n"
-    . 'APP_ENV=production' . "\n"
-    . 'APP_KEY=' . "\n"
-    . 'APP_DEBUG=false' . "\n"
-    . 'DB_CONNECTION=pgsql' . "\n"
-    . 'DATABASE_URL=' . $DATABASE_URL . "\n"
-    . 'SESSION_DRIVER=file' . "\n"
-    . 'CACHE_STORE=file' . "\n"
-    . 'QUEUE_CONNECTION=sync' . "\n"
-    . 'LOG_LEVEL=error' . "\n"
-    . 'ULTRAMSG_INSTANCE=' . (getenv('ULTRAMSG_INSTANCE') ?: 'instance172465') . "\n"
-    . 'ULTRAMSG_TOKEN=' . (getenv('ULTRAMSG_TOKEN') ?: 'gg1udf6cwn10vbc1') . "\n";
-file_put_contents('/var/www/html/.env', $content);
-echo "==> .env creado\n";
+echo "==> .env ya existe desde build\n";
 
 $cmds = [
-    'php artisan key:generate --force',
     'php artisan config:clear',
     'php artisan migrate --force',
     'php artisan db:seed --class=DepartamentosSeeder --force',
@@ -89,7 +75,7 @@ $cmds = [
     'apache2-foreground',
 ];
 
-$skip = ['php artisan storage:link', 'php artisan key:generate --force'];
+$skip = ['php artisan storage:link'];
 
 foreach ($cmds as $cmd) {
     echo "==> $cmd\n";
