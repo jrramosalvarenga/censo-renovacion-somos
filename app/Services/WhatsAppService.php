@@ -27,11 +27,12 @@ class WhatsAppService
         }
 
         if (!$this->instance || !$this->token) {
-            return ['ok' => false, 'error' => 'WhatsApp no configurado (falta ULTRAMSG_INSTANCE o ULTRAMSG_TOKEN)'];
+            return ['ok' => false, 'error' => 'WhatsApp no configurado'];
         }
 
         try {
             $response = Http::timeout(15)
+                ->withOptions(['verify' => $this->sslCert()])
                 ->asForm()
                 ->post("{$this->baseUrl}/messages/chat", [
                     'token' => $this->token,
@@ -54,13 +55,35 @@ class WhatsAppService
         }
     }
 
+    // Ruta del certificado SSL según entorno
+    private function sslCert(): string|bool
+    {
+        // En producción (Linux/Docker) usa los certificados del sistema
+        if (PHP_OS_FAMILY !== 'Windows') {
+            return true;
+        }
+
+        // En Windows busca el cacert.pem en varias rutas comunes de Laragon
+        $rutas = [
+            'C:/laragon/etc/ssl/cacert.pem',
+            ini_get('curl.cainfo'),
+        ];
+
+        foreach ($rutas as $ruta) {
+            if ($ruta && file_exists($ruta)) {
+                return $ruta;
+            }
+        }
+
+        // Último recurso: sin verificación (solo desarrollo local)
+        return false;
+    }
+
     private function formatearNumero(string $telefono): ?string
     {
-        // Quitar todo excepto dígitos
         $solo = preg_replace('/\D/', '', $telefono);
 
         if (strlen($solo) === 8) {
-            // Número Honduras sin código de país → agregar 504
             return '504' . $solo;
         }
 
