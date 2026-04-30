@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar sesión — Renovación Somos</title>
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dshnrcakf/image/upload/v1777565289/censo/favicon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -71,9 +72,10 @@
 <body>
     <div class="login-card card">
         <div class="login-header">
-            <div class="escudo"><i class="bi bi-people-fill"></i></div>
-            <h1>Renovación Somos</h1>
-            <p>Sistema de Censo de Militancia — Honduras</p>
+            <img src="https://res.cloudinary.com/dshnrcakf/image/upload/v1777565289/censo/logo.jpg"
+                 alt="Renovación Somos"
+                 style="max-height:80px; width:auto; object-fit:contain; margin-bottom:0.75rem;">
+            <p class="mb-0" style="font-size:0.85rem;opacity:0.9">Sistema de Censo de Militancia — Honduras</p>
         </div>
         <div class="login-body">
             @if($errors->any())
