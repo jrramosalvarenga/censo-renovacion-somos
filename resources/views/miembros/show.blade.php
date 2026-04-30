@@ -20,7 +20,8 @@
     <div class="col-md-3 text-center">
         <div class="card shadow-sm p-3">
             @if($miembro->foto)
-                <img src="{{ asset('storage/'.$miembro->foto) }}" class="rounded-circle mb-3 mx-auto d-block" width="100" height="100" style="object-fit:cover">
+                @php $fotoUrl = str_starts_with($miembro->foto, 'http') ? $miembro->foto : asset('storage/'.$miembro->foto); @endphp
+                <img src="{{ $fotoUrl }}" class="rounded-circle mb-3 mx-auto d-block" width="100" height="100" style="object-fit:cover">
             @else
                 <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white mx-auto mb-3" style="width:100px;height:100px;font-size:2rem">
                     {{ strtoupper(substr($miembro->nombres,0,1).substr($miembro->apellidos,0,1)) }}

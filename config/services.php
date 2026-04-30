@@ -46,4 +46,8 @@ return [
         'token'    => env('ULTRAMSG_TOKEN'),
     ],
 
+    'cloudinary' => [
+        'url' => env('CLOUDINARY_URL'),
+    ],
+
 ];

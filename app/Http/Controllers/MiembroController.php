@@ -7,6 +7,7 @@ use App\Models\Departamento;
 use App\Models\Localidad;
 use App\Models\Miembro;
 use App\Models\Municipio;
+use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -122,7 +123,7 @@ class MiembroController extends Controller
         }
 
         if ($request->hasFile('foto')) {
-            $validated['foto'] = $request->file('foto')->store('fotos', 'public');
+            $validated['foto'] = $this->subirFoto($request->file('foto'));
         }
 
         Miembro::create($validated);
@@ -168,8 +169,10 @@ class MiembroController extends Controller
         ]);
 
         if ($request->hasFile('foto')) {
-            if ($miembro->foto) Storage::disk('public')->delete($miembro->foto);
-            $validated['foto'] = $request->file('foto')->store('fotos', 'public');
+            if ($miembro->foto && !str_contains($miembro->foto, 'cloudinary')) {
+                Storage::disk('public')->delete($miembro->foto);
+            }
+            $validated['foto'] = $this->subirFoto($request->file('foto'));
         }
 
         $miembro->update($validated);
@@ -192,6 +195,17 @@ class MiembroController extends Controller
     public function getLocalidades(Municipio $municipio)
     {
         return response()->json($municipio->localidades()->orderBy('nombre')->get());
+    }
+
+    private function subirFoto($archivo): string
+    {
+        $cloudinary = new CloudinaryService();
+        if ($cloudinary->disponible()) {
+            $url = $cloudinary->subir($archivo);
+            if ($url) return $url;
+        }
+        // Fallback a storage local
+        return $archivo->store('fotos', 'public');
     }
 
     private function soloSupervisor(): void

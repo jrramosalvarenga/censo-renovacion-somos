@@ -86,7 +86,7 @@
                     <td>
                         <div class="d-flex align-items-center gap-2">
                             @if($m->foto)
-                                <img src="{{ asset('storage/'.$m->foto) }}" class="rounded-circle" width="32" height="32" style="object-fit:cover">
+                                <img src="{{ str_starts_with($m->foto, 'http') ? $m->foto : asset('storage/'.$m->foto) }}" class="rounded-circle" width="32" height="32" style="object-fit:cover">
                             @else
                                 <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" style="width:32px;height:32px;font-size:0.75rem">
                                     {{ strtoupper(substr($m->nombres,0,1).substr($m->apellidos,0,1)) }}
