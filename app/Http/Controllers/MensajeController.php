@@ -11,6 +11,7 @@ use App\Models\Municipio;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MensajeController extends Controller
 {
@@ -171,5 +172,94 @@ class MensajeController extends Controller
             'localidad'    => Localidad::find($id)?->nombre ?? '',
             default        => '',
         };
+    }
+
+    // ── Cumpleaños ──────────────────────────────────────
+
+    public function cumpleanos()
+    {
+        $hoy      = now();
+        $mes      = $hoy->month;
+        $dia      = $hoy->day;
+
+        $miembros = Miembro::whereNotNull('telefono')
+            ->where('telefono', '!=', '')
+            ->whereNotNull('fecha_nacimiento')
+            ->whereMonth('fecha_nacimiento', $mes)
+            ->whereDay('fecha_nacimiento', $dia)
+            ->where('estado', 'activo')
+            ->get();
+
+        return view('mensajes.cumpleanos', compact('miembros', 'hoy'));
+    }
+
+    public function enviarCumpleanos(Request $request)
+    {
+        $request->validate([
+            'mensaje_template' => 'required|string|min:10',
+        ]);
+
+        $hoy      = now();
+        $mes      = $hoy->month;
+        $dia      = $hoy->day;
+
+        $miembros = Miembro::whereNotNull('telefono')
+            ->where('telefono', '!=', '')
+            ->whereNotNull('fecha_nacimiento')
+            ->whereMonth('fecha_nacimiento', $mes)
+            ->whereDay('fecha_nacimiento', $dia)
+            ->where('estado', 'activo')
+            ->get();
+
+        if ($miembros->isEmpty()) {
+            return back()->with('error', 'No hay cumpleañeros con teléfono registrado hoy.');
+        }
+
+        $mensaje = Mensaje::create([
+            'user_id'             => Auth::id(),
+            'contenido'           => $request->mensaje_template,
+            'destino_tipo'        => 'todos',
+            'destino_id'          => null,
+            'destino_nombre'      => 'Cumpleañeros del ' . $hoy->format('d/m/Y'),
+            'total_destinatarios' => $miembros->count(),
+            'estado'              => 'enviando',
+        ]);
+
+        $whatsapp = new WhatsAppService();
+        $enviados = 0;
+        $fallidos = 0;
+
+        foreach ($miembros as $miembro) {
+            // Personalizar mensaje con el nombre del miembro
+            $texto = str_replace(
+                ['[NOMBRE]', '[nombre]', '{nombre}', '{NOMBRE}'],
+                $miembro->nombres,
+                $request->mensaje_template
+            );
+
+            $resultado = $whatsapp->enviar($miembro->telefono, $texto);
+
+            MensajeEnvio::create([
+                'mensaje_id' => $mensaje->id,
+                'miembro_id' => $miembro->id,
+                'telefono'   => $miembro->telefono,
+                'estado'     => $resultado['ok'] ? 'enviado' : 'fallido',
+                'error'      => $resultado['ok'] ? null : $resultado['error'],
+                'sent_at'    => $resultado['ok'] ? now() : null,
+            ]);
+
+            $resultado['ok'] ? $enviados++ : $fallidos++;
+
+            if ($enviados % 5 === 0) usleep(500000);
+        }
+
+        $mensaje->update([
+            'enviados' => $enviados,
+            'fallidos' => $fallidos,
+            'estado'   => $fallidos === $miembros->count() ? 'fallido' : 'completado',
+        ]);
+
+        return redirect()->route('mensajes.show', $mensaje)
+            ->with('success', "¡Felicitaciones enviadas! {$enviados} mensajes exitosos.");
     }
 }

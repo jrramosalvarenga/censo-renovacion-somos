@@ -54,6 +54,8 @@ Route::middleware('auth')->group(function () {
         // Mensajes masivos WhatsApp
         Route::resource('mensajes', MensajeController::class)->only(['index','create','store','show']);
         Route::get('/mensajes/preview', [MensajeController::class, 'preview'])->name('mensajes.preview');
+        Route::get('/mensajes/cumpleanos', [MensajeController::class, 'cumpleanos'])->name('mensajes.cumpleanos');
+        Route::post('/mensajes/cumpleanos/enviar', [MensajeController::class, 'enviarCumpleanos'])->name('mensajes.cumpleanos.enviar');
         Route::get('/mensajes/api/departamentos/{departamento}/municipios', [MensajeController::class, 'getMunicipios']);
         Route::get('/mensajes/api/municipios/{municipio}/localidades', [MensajeController::class, 'getLocalidades']);
     });

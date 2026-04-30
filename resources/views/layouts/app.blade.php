@@ -214,8 +214,13 @@
                     <small class="sidebar-label">WhatsApp</small>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('mensajes.*') ? 'active' : '' }}" href="{{ route('mensajes.index') }}">
+                    <a class="nav-link {{ request()->routeIs('mensajes.index') || request()->routeIs('mensajes.create') ? 'active' : '' }}" href="{{ route('mensajes.index') }}">
                         <i class="bi bi-whatsapp text-success"></i> Mensajes masivos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('mensajes.cumpleanos') ? 'active' : '' }}" href="{{ route('mensajes.cumpleanos') }}">
+                        <i class="bi bi-cake2 text-danger"></i> Feliz cumpleaños
                     </a>
                 </li>
                 @endif
