@@ -34,7 +34,8 @@ class UserController extends Controller
             'municipio_id.required_if' => 'El municipio es obligatorio para operadores.',
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
+        $validated['password']   = Hash::make($validated['password']);
+        $validated['created_by'] = auth()->id();
         if ($validated['rol'] === 'supervisor') {
             $validated['municipio_id'] = null;
         }

@@ -170,6 +170,11 @@
                         <i class="bi bi-person-plus"></i> Nuevo miembro
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('ranking') ? 'active' : '' }}" href="{{ route('ranking') }}">
+                        <i class="bi bi-trophy"></i> Ranking
+                    </a>
+                </li>
                 @if(Auth::user()->esSupervisor())
                 <li class="nav-item mt-2">
                     <small class="sidebar-label">Territorio</small>
@@ -248,42 +253,53 @@
 {{-- Widget de Gamificación --}}
 @php
     use App\Services\GamificacionService;
-    $gTotal   = GamificacionService::totalMiembros(Auth::user());
-    $gProgreso = GamificacionService::progreso($gTotal);
-    $gPuntos  = GamificacionService::calcularPuntos(Auth::user());
+    $gDirectos  = GamificacionService::totalMiembros(Auth::user());
+    $gRed       = GamificacionService::totalRed(Auth::user());
+    $gEq        = $gDirectos + (int)round($gRed * 0.5);
+    $gProgreso  = GamificacionService::progreso($gEq);
+    $gPuntos    = GamificacionService::puntosDirectosSQL(Auth::user());
 @endphp
-<div id="gami-widget" style="
+<a href="{{ route('ranking') }}" id="gami-widget" style="
     position:fixed; bottom:1.2rem; right:1.2rem; z-index:1050;
     background:#1e1e1e; color:#fff; border-radius:16px;
     padding:0.75rem 1rem; min-width:220px; max-width:260px;
     box-shadow:0 4px 24px rgba(0,0,0,0.35);
-    cursor:pointer; transition:transform 0.2s;
-" onclick="toggleGami()" title="Tu nivel">
+    cursor:pointer; transition:transform 0.2s; text-decoration:none;
+    display:block;
+" title="Ver ranking">
     <div class="d-flex align-items-center gap-2 mb-1">
         <span style="font-size:1.6rem">{{ $gProgreso['actual']['icono'] }}</span>
         <div>
-            <div style="font-size:0.72rem; color:#aaa; line-height:1">NIVEL</div>
-            <div style="font-size:0.95rem; font-weight:700; line-height:1.2; color:#fff">
+            <div style="font-size:0.68rem; color:#aaa; line-height:1">NIVEL</div>
+            <div style="font-size:0.92rem; font-weight:700; line-height:1.2; color:#fff">
                 {{ $gProgreso['actual']['nombre'] }}
             </div>
         </div>
         <div class="ms-auto text-end">
-            <div style="font-size:1.1rem; font-weight:700; color:{{ $gProgreso['actual']['color'] }}">
+            <div style="font-size:1.05rem; font-weight:700; color:{{ $gProgreso['actual']['color'] }}">
                 {{ number_format($gPuntos) }}
             </div>
-            <div style="font-size:0.68rem; color:#aaa">pts</div>
+            <div style="font-size:0.62rem; color:#666">pts directos</div>
         </div>
+    </div>
+
+    {{-- Totales piramidales --}}
+    <div style="font-size:0.68rem; color:#888; margin-bottom:0.3rem">
+        <span style="color:#ccc">{{ $gDirectos }}</span> propios
+        @if($gRed > 0)
+            · <span style="color:#{{ substr($gProgreso['actual']['color'], 1) }}">+{{ $gRed }}</span> red
+            = <span style="color:#fff; font-weight:600">{{ $gEq }}</span> equiv.
+        @endif
     </div>
 
     {{-- Barra de progreso --}}
     @if($gProgreso['siguiente'])
-    <div style="background:#333; border-radius:99px; height:6px; margin:0.4rem 0;">
+    <div style="background:#333; border-radius:99px; height:5px; margin:0.35rem 0;">
         <div style="background:{{ $gProgreso['actual']['color'] }}; width:{{ $gProgreso['porcentaje'] }}%;
              height:100%; border-radius:99px; transition:width 0.5s;"></div>
     </div>
-    <div style="font-size:0.68rem; color:#888">
-        {{ $gTotal }} miembros ·
-        faltan <strong style="color:#fff">{{ $gProgreso['faltan'] }}</strong>
+    <div style="font-size:0.66rem; color:#777">
+        Faltan <strong style="color:#fff">{{ $gProgreso['faltan'] }}</strong>
         para {{ $gProgreso['siguiente']['icono'] }} {{ $gProgreso['siguiente']['nombre'] }}
     </div>
     @else
@@ -291,19 +307,19 @@
         ¡Nivel máximo alcanzado! 🎉
     </div>
     @endif
-</div>
+    <div style="font-size:0.6rem; color:#444; margin-top:0.4rem; text-align:right">
+        Ver ranking →
+    </div>
+</a>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-function toggleGami() {
-    const w = document.getElementById('gami-widget');
-    w.style.transform = w.style.transform === 'scale(1.05)' ? 'scale(1)' : 'scale(1.05)';
+// Efecto hover en el widget de nivel
+const gw = document.getElementById('gami-widget');
+if (gw) {
+    gw.addEventListener('mouseenter', () => gw.style.transform = 'scale(1.03)');
+    gw.addEventListener('mouseleave', () => gw.style.transform = 'scale(1)');
 }
-// Minimizar widget al hacer click fuera
-document.addEventListener('click', function(e) {
-    const w = document.getElementById('gami-widget');
-    if (w && !w.contains(e.target)) w.style.transform = 'scale(1)';
-});
 </script>
 @yield('scripts')
 </body>

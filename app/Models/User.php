@@ -13,7 +13,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'email', 'password',
-        'rol', 'municipio_id', 'google_id', 'avatar',
+        'rol', 'municipio_id', 'google_id', 'avatar', 'created_by',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -34,6 +34,18 @@ class User extends Authenticatable
     public function miembrosRegistrados()
     {
         return $this->hasMany(Miembro::class, 'registered_by');
+    }
+
+    // Quién creó este usuario
+    public function creadoPor()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    // Usuarios que yo creé (mis enroladores directos)
+    public function usuariosCreados()
+    {
+        return $this->hasMany(User::class, 'created_by');
     }
 
     public function esSupervisor(): bool

@@ -24,6 +24,18 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Ranking — visible para todos los usuarios autenticados
+    Route::get('/ranking', function () {
+        $ranking    = \App\Services\GamificacionService::rankingCompleto();
+        $userId     = auth()->id();
+        $miPosicion = collect($ranking)->first(fn($r) => $r['user']->id === $userId);
+        $logros     = \App\Services\GamificacionService::logros(
+            auth()->user(),
+            $miPosicion ? $miPosicion['total_equivalente'] : null
+        );
+        return view('ranking', compact('ranking', 'miPosicion', 'logros'));
+    })->name('ranking');
+
     // Miembros — acceso según rol (restricciones internas en el controller)
     Route::resource('miembros', MiembroController::class);
     Route::get('/api/departamentos/{departamento}/municipios', [MiembroController::class, 'getMunicipios'])->name('api.municipios');
@@ -50,12 +62,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('usuarios', UserController::class)->except(['show']);
         Route::get('/api/usuarios/departamentos/{departamento}/municipios', [UserController::class, 'getMunicipios'])
              ->name('api.usuarios.municipios');
-
-        // Ranking gamificación
-        Route::get('/ranking', function() {
-            $ranking = \App\Services\GamificacionService::ranking();
-            return view('ranking', compact('ranking'));
-        })->name('ranking');
 
         // Mensajes masivos WhatsApp
         Route::resource('mensajes', MensajeController::class)->only(['index','create','store','show']);
