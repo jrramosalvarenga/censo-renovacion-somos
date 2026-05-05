@@ -51,6 +51,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/api/usuarios/departamentos/{departamento}/municipios', [UserController::class, 'getMunicipios'])
              ->name('api.usuarios.municipios');
 
+        // Ranking gamificación
+        Route::get('/ranking', function() {
+            $ranking = \App\Services\GamificacionService::ranking();
+            return view('ranking', compact('ranking'));
+        })->name('ranking');
+
         // Mensajes masivos WhatsApp
         Route::resource('mensajes', MensajeController::class)->only(['index','create','store','show']);
         Route::get('/mensajes/preview', [MensajeController::class, 'preview'])->name('mensajes.preview');

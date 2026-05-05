@@ -245,7 +245,66 @@
     </div>
 </div>
 
+{{-- Widget de Gamificación --}}
+@php
+    use App\Services\GamificacionService;
+    $gTotal   = GamificacionService::totalMiembros(Auth::user());
+    $gProgreso = GamificacionService::progreso($gTotal);
+    $gPuntos  = GamificacionService::calcularPuntos(Auth::user());
+@endphp
+<div id="gami-widget" style="
+    position:fixed; bottom:1.2rem; right:1.2rem; z-index:1050;
+    background:#1e1e1e; color:#fff; border-radius:16px;
+    padding:0.75rem 1rem; min-width:220px; max-width:260px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.35);
+    cursor:pointer; transition:transform 0.2s;
+" onclick="toggleGami()" title="Tu nivel">
+    <div class="d-flex align-items-center gap-2 mb-1">
+        <span style="font-size:1.6rem">{{ $gProgreso['actual']['icono'] }}</span>
+        <div>
+            <div style="font-size:0.72rem; color:#aaa; line-height:1">NIVEL</div>
+            <div style="font-size:0.95rem; font-weight:700; line-height:1.2; color:#fff">
+                {{ $gProgreso['actual']['nombre'] }}
+            </div>
+        </div>
+        <div class="ms-auto text-end">
+            <div style="font-size:1.1rem; font-weight:700; color:{{ $gProgreso['actual']['color'] }}">
+                {{ number_format($gPuntos) }}
+            </div>
+            <div style="font-size:0.68rem; color:#aaa">pts</div>
+        </div>
+    </div>
+
+    {{-- Barra de progreso --}}
+    @if($gProgreso['siguiente'])
+    <div style="background:#333; border-radius:99px; height:6px; margin:0.4rem 0;">
+        <div style="background:{{ $gProgreso['actual']['color'] }}; width:{{ $gProgreso['porcentaje'] }}%;
+             height:100%; border-radius:99px; transition:width 0.5s;"></div>
+    </div>
+    <div style="font-size:0.68rem; color:#888">
+        {{ $gTotal }} miembros ·
+        faltan <strong style="color:#fff">{{ $gProgreso['faltan'] }}</strong>
+        para {{ $gProgreso['siguiente']['icono'] }} {{ $gProgreso['siguiente']['nombre'] }}
+    </div>
+    @else
+    <div style="font-size:0.72rem; color:#FFD700; margin-top:0.3rem">
+        ¡Nivel máximo alcanzado! 🎉
+    </div>
+    @endif
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function toggleGami() {
+    const w = document.getElementById('gami-widget');
+    w.style.transform = w.style.transform === 'scale(1.05)' ? 'scale(1)' : 'scale(1.05)';
+}
+// Minimizar widget al hacer click fuera
+document.addEventListener('click', function(e) {
+    const w = document.getElementById('gami-widget');
+    if (w && !w.contains(e.target)) w.style.transform = 'scale(1)';
+});
+</script>
 @yield('scripts')
 </body>
 </html>

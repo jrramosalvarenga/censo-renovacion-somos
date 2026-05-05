@@ -31,6 +31,11 @@ class User extends Authenticatable
         return $this->belongsTo(Municipio::class);
     }
 
+    public function miembrosRegistrados()
+    {
+        return $this->hasMany(Miembro::class, 'registered_by');
+    }
+
     public function esSupervisor(): bool
     {
         return $this->rol === 'supervisor';

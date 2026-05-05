@@ -126,6 +126,7 @@ class MiembroController extends Controller
             $validated['foto'] = $this->subirFoto($request->file('foto'));
         }
 
+        $validated['registered_by'] = Auth::id();
         Miembro::create($validated);
         return redirect()->route('miembros.index')->with('success', 'Miembro registrado exitosamente.');
     }

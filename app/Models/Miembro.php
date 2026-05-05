@@ -12,7 +12,7 @@ class Miembro extends Model
     protected $fillable = [
         'nombres', 'apellidos', 'identidad', 'fecha_nacimiento', 'sexo',
         'telefono', 'email', 'direccion', 'tipo', 'estado',
-        'localidad_id', 'cargo_id', 'foto', 'observaciones',
+        'localidad_id', 'cargo_id', 'foto', 'observaciones', 'registered_by',
     ];
 
     protected $casts = [
