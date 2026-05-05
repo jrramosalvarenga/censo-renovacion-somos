@@ -47,10 +47,14 @@ class GamificacionService
     // ── Miembros de la red (nivel 2): enrolados por usuarios que yo creé
     public static function totalRed(User $user): int
     {
-        return DB::table('miembros')
-            ->join('users', 'users.id', '=', 'miembros.registered_by')
-            ->where('users.created_by', $user->id)
-            ->count();
+        try {
+            return DB::table('miembros')
+                ->join('users', 'users.id', '=', 'miembros.registered_by')
+                ->where('users.created_by', $user->id)
+                ->count();
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 
     // ── Total equivalente para determinar nivel (directo + 50 % red) ───
@@ -130,20 +134,24 @@ class GamificacionService
             ->keyBy('id');
 
         // Query 2: aggregate de red — miembros registrados por usuarios que yo creé
-        $redStats = DB::table('miembros')
-            ->join('users as u2', 'u2.id', '=', 'miembros.registered_by')
-            ->whereNotNull('u2.created_by')
-            ->groupBy('u2.created_by')
-            ->selectRaw("
-                u2.created_by,
-                COUNT(miembros.id) as total_red,
-                COALESCE(SUM(
-                    (CASE WHEN miembros.tipo='militante' THEN 15 WHEN miembros.tipo='simpatizante' THEN 10 ELSE 0 END) +
-                    (CASE WHEN miembros.estado='activo' THEN 2 ELSE 0 END)
-                ), 0) as puntos_red
-            ")
-            ->get()
-            ->keyBy('created_by');
+        try {
+            $redStats = DB::table('miembros')
+                ->join('users as u2', 'u2.id', '=', 'miembros.registered_by')
+                ->whereNotNull('u2.created_by')
+                ->groupBy('u2.created_by')
+                ->selectRaw("
+                    u2.created_by,
+                    COUNT(miembros.id) as total_red,
+                    COALESCE(SUM(
+                        (CASE WHEN miembros.tipo='militante' THEN 15 WHEN miembros.tipo='simpatizante' THEN 10 ELSE 0 END) +
+                        (CASE WHEN miembros.estado='activo' THEN 2 ELSE 0 END)
+                    ), 0) as puntos_red
+                ")
+                ->get()
+                ->keyBy('created_by');
+        } catch (\Exception $e) {
+            $redStats = collect();
+        }
 
         return $users
             ->map(function ($u) use ($redStats) {
